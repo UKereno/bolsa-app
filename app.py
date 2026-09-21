@@ -265,7 +265,6 @@ def carregar_dados_lote(tickers_list):
 
         for ticker in tickers_list:
             try:
-                # Trata estrutura caso só tenha 1 ticker ou múltiplos
                 if len(tickers_list) == 1:
                     df_ticker = dados
                 else:
@@ -274,7 +273,6 @@ def carregar_dados_lote(tickers_list):
                     else:
                         continue
 
-                # Garante que é um DataFrame e possui a coluna 'Close'
                 if isinstance(df_ticker, pd.DataFrame) and "Close" in df_ticker:
                     df_clean = df_ticker.dropna(subset=["Close"])
 
@@ -326,9 +324,9 @@ def exibir_alertas_grelha(df):
         st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
-# Criação das 4 Abas
+# Criação das 4 Abas (Nome da aba dos EUA atualizado para US - NYSE)
 tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
-    ["🇺🇸 US Pre-Market", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
+    ["🇺🇸 US - NYSE", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
 )
 
 with tab_us:
