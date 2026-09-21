@@ -2,19 +2,22 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
-# Configuração visual para tela de celular
+# Configuração visual para ecrã de telemóvel
 st.set_page_config(
-    page_title="Alertas de Bolsa", page_icon="📈", layout="centered"
+    page_title="UKereno | Alertas Bolsa", page_icon="📈", layout="centered"
 )
 
+# Exibe o logótipo centralizado no topo do app
+st.image("logo.jpg", use_container_width=True)
+
 st.title("📈 Alertas Pré-Mercado")
-st.caption("Ações Nasdaq/NYSE com variação mínima de ±2%")
+st.caption("Monitorização de ações Nasdaq/NYSE com variação mínima de ±2%")
 
 # Botão para atualizar dados manualmente
 if st.button("🔄 Atualizar Dados", use_container_width=True):
     st.cache_data.clear()
 
-# Lista de ativos para monitorar
+# Lista de ativos para monitorizar
 TICKERS = [
     "AAPL",
     "MSFT",
@@ -30,7 +33,7 @@ TICKERS = [
 MIN_GAP_PCT = 2.0
 
 
-@st.cache_data(ttl=300)  # Guarda os dados em cache por 5 minutos
+@st.cache_data(ttl=300)
 def carregar_dados():
     alertas = []
     for ticker in TICKERS:
@@ -54,7 +57,6 @@ def carregar_dados():
     return pd.DataFrame(alertas)
 
 
-# Processamento e exibição
 dados = carregar_dados()
 
 if not dados.empty:
@@ -70,3 +72,7 @@ if not dados.empty:
             st.divider()
 else:
     st.info("Nenhum ativo atingiu o critério de ±2% de Gap no momento.")
+
+# Rodapé com a marca
+st.markdown("---")
+st.caption("Powered by **UKereno Analytics**")
