@@ -4,7 +4,30 @@ import yfinance as yf
 
 # Configuração visual para ecrã de telemóvel
 st.set_page_config(
-    page_title="UKereno | Alertas Bolsa", page_icon="📈", layout="centered"
+    page_title="UKereno | Alertas Bolsa",
+    page_icon="📈",
+    layout="centered"
+)
+
+# Estilização em CSS para forçar o fundo preto/escuro e ajustar cores
+st.markdown(
+    """
+    <style>
+    /* Fundo da aplicação */
+    .stApp {
+        background-color: #0E1117;
+        color: #FAFAFA;
+    }
+    /* Estilo do título das métricas */
+    [data-testid="stMetricValue"] {
+        color: #FAFAFA !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #B0BEC5 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 # Exibe o logótipo centralizado no topo do app
@@ -19,16 +42,8 @@ if st.button("🔄 Atualizar Dados", use_container_width=True):
 
 # Lista de ativos para monitorizar
 TICKERS = [
-    "AAPL",
-    "MSFT",
-    "NVDA",
-    "AMD",
-    "TSLA",
-    "AMZN",
-    "GOOGL",
-    "META",
-    "NFLX",
-    "INTC",
+    "AAPL", "MSFT", "NVDA", "AMD", "TSLA",
+    "AMZN", "GOOGL", "META", "NFLX", "INTC"
 ]
 MIN_GAP_PCT = 2.0
 
