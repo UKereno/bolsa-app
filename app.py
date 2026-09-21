@@ -2,23 +2,27 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
-# Configuração visual para ecrã de telemóvel
+# Configuração visual da página para telemóvel
 st.set_page_config(
-    page_title="UKereno | Alertas Bolsa",
-    page_icon="📈",
-    layout="centered"
+    page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilização em CSS para forçar o fundo preto/escuro e ajustar cores
+# Estilo CSS para fundo escuro e ajuste de tamanho das fontes
 st.markdown(
     """
     <style>
-    /* Fundo da aplicação */
+    /* Fundo escuro */
     .stApp {
         background-color: #0E1117;
         color: #FAFAFA;
     }
-    /* Estilo do título das métricas */
+    /* Reduzir o tamanho do título principal */
+    h1 {
+        font-size: 1.6rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+    /* Estilo do valor e rótulo das métricas */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
     }
@@ -27,23 +31,32 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# Exibe o logótipo centralizado no topo do app
+# Exibe o logótipo no topo
 st.image("logo.jpg", use_container_width=True)
 
-st.title("📈 Alertas Pré-Mercado")
-st.caption("Monitorização de ações Nasdaq/NYSE com variação mínima de ±2%")
+# Título em inglês e tamanho ajustado
+st.title("📈 Pre-Market Alerts")
+st.caption("Monitoring Nasdaq/NYSE stocks with ±2% minimum Gap")
 
 # Botão para atualizar dados manualmente
-if st.button("🔄 Atualizar Dados", use_container_width=True):
+if st.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
 
-# Lista de ativos para monitorizar
+# Lista de ações monitorizadas
 TICKERS = [
-    "AAPL", "MSFT", "NVDA", "AMD", "TSLA",
-    "AMZN", "GOOGL", "META", "NFLX", "INTC"
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMD",
+    "TSLA",
+    "AMZN",
+    "GOOGL",
+    "META",
+    "NFLX",
+    "INTC",
 ]
 MIN_GAP_PCT = 2.0
 
@@ -83,11 +96,11 @@ if not dados.empty:
                 value=f"${row['Preço']}",
                 delta=f"{row['Gap (%)']}%",
             )
-            st.write(f"Fechamento anterior: **${row['Fech. Anterior']}**")
+            st.write(f"Previous Close: **${row['Fech. Anterior']}**")
             st.divider()
 else:
-    st.info("Nenhum ativo atingiu o critério de ±2% de Gap no momento.")
+    st.info("No stocks met the ±2% Gap criteria at the moment.")
 
-# Rodapé com a marca
+# Rodapé personalizado
 st.markdown("---")
-st.caption("Powered by **UKereno Analytics**")
+st.caption("Powered by **UKereno Global Data & Analytics**")
