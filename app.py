@@ -145,7 +145,7 @@ if st.button("🔄 Refresh Data", use_container_width=True):
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Listas de Tickers por Região
+# Listas Expandidas de Tickers por Região
 US_TICKERS = [
     "AAPL",
     "MSFT",
@@ -200,6 +200,7 @@ US_TICKERS = [
 ]
 
 UK_EU_TICKERS = [
+    # Reino Unido (LSE)
     "SHEL.L",
     "AZN.L",
     "HSBA.L",
@@ -210,27 +211,89 @@ UK_EU_TICKERS = [
     "REL.L",
     "BATS.L",
     "PRU.L",
+    "LLOY.L",
+    "BARC.L",
+    "VOD.L",
+    "RR.L",
+    "GLEN.L",
+    "AHT.L",
+    "NWG.L",
+    "TSCO.L",
+    "BA.L",
+    "LSEG.L",
+    # Alemanha (DAX)
     "SAP.DE",
-    "ASML.AS",
-    "TTE.PA",
+    "SIE.DE",
+    "ALV.DE",
+    "DTG.DE",
+    "MBG.DE",
+    "BMW.DE",
+    "VOW3.DE",
+    "BAS.DE",
+    "BAYN.DE",
+    "ADS.DE",
+    # França (CAC 40)
     "MC.PA",
     "OR.PA",
-    "SIE.DE",
+    "TTE.PA",
+    "SAN.PA",
+    "AIR.PA",
+    "SU.PA",
+    "BNP.PA",
+    "KER.PA",
+    "RMS.PA",
+    "CDI.PA",
+    # Holanda / Outros EU
+    "ASML.AS",
+    "INGA.AS",
+    "PRX.AS",
+    "SAN.MC",
+    "BBVA.MC",
+    "NESN.SW",
+    "NOVN.SW",
+    "ROG.SW",
 ]
 
 ASIA_TICKERS = [
-    "2330.TW",
-    "0700.HK",
-    "9988.HK",
+    # Japão (Tóquio)
     "7203.T",
     "6758.T",
     "9984.T",
+    "6861.T",
+    "8306.T",
+    "7974.T",
+    "6501.T",
+    "7751.T",
+    "8035.T",
+    "9983.T",
+    # Hong Kong / China
+    "0700.HK",
+    "9988.HK",
     "3690.HK",
     "1810.HK",
     "0941.HK",
+    "1299.HK",
+    "2318.HK",
+    "0388.HK",
+    "9618.HK",
+    "1024.HK",
+    # Taiwan
+    "2330.TW",
+    "2317.TW",
+    "2454.TW",
+    "2308.TW",
+    "2382.TW",
+    # Índia (NSE)
     "RELIANCE.NS",
     "TCS.NS",
     "INFY.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "BHARTIARTL.NS",
+    "SBIN.NS",
+    "LTIM.NS",
+    "TATAMOTORS.NS",
+    "WIPRO.NS",
 ]
 
 BR_TICKERS = [
@@ -250,6 +313,30 @@ BR_TICKERS = [
     "JBSS3.SA",
     "MGLU3.SA",
     "B3SA3.SA",
+    "SANB11.SA",
+    "BPAC11.SA",
+    "RADL3.SA",
+    "LREN3.SA",
+    "RAIZ4.SA",
+    "VBBR3.SA",
+    "EMBR3.SA",
+    "EQTL3.SA",
+    "CPLE6.SA",
+    "CMIG4.SA",
+    "CCRO3.SA",
+    "CYRE3.SA",
+    "MRVE3.SA",
+    "ASAI3.SA",
+    "CRFB3.SA",
+    "NTCO3.SA",
+    "MULT3.SA",
+    "SBSP3.SA",
+    "HAPV3.SA",
+    "RDOR3.SA",
+    "EGIE3.SA",
+    "TAEE11.SA",
+    "ALOS3.SA",
+    "BRFS3.SA",
 ]
 
 MIN_GAP_PCT = 2.0
@@ -324,7 +411,7 @@ def exibir_alertas_grelha(df):
         st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
-# Criação das 4 Abas (Nome da aba dos EUA atualizado para US - NYSE)
+# Criação das 4 Abas
 tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
     ["🇺🇸 US - NYSE", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
 )
