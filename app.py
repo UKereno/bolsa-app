@@ -7,14 +7,14 @@ st.set_page_config(
     page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilo CSS avançado para Dark Mode, botão preto com borda verde e texto grande
+# Estilo CSS estrito: Botão Preto, Borda Verde Fina, Texto Grande
 st.markdown(
     """
     <style>
     /* Fundo escuro geral */
     .stApp {
-        background-color: #0E1117;
-        color: #FAFAFA;
+        background-color: #0E1117 !important;
+        color: #FAFAFA !important;
     }
     
     /* Reduzir o tamanho do título principal */
@@ -24,24 +24,30 @@ st.markdown(
         padding-bottom: 0.2rem !important;
     }
 
-    /* Botão Refresh Data: Fundo Preto, Borda Verde Neon e Texto Grande */
-    div.stButton > button {
-        background-color: #0E1117 !important;
+    /* Forçar estilização do Botão Refresh Data */
+    div.stButton > button, div.stButton > button:focus, div.stButton > button:active {
+        background-color: #000000 !important;
+        background: #000000 !important;
         color: #00E676 !important;
-        font-size: 1.4rem !important; /* Texto aumentado significativamente */
-        font-weight: 800 !important;
-        border: 2px solid #00E676 !important;
-        border-radius: 12px !important;
-        padding: 0.8rem 1.2rem !important;
+        font-size: 1.5rem !important; /* Letras internas maiores */
+        font-weight: 900 !important;
+        border: 1px solid #00E676 !important; /* Bordinha verde bem pequena (1px) */
+        border-radius: 8px !important;
+        padding: 0.8rem 1rem !important;
         width: 100% !important;
-        transition: all 0.3s ease !important;
-    }
-    div.stButton > button:hover {
-        background-color: #00E676 !important;
-        color: #0E1117 !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
 
-    /* Aumentar em 20% o tamanho dos valores e variações */
+    /* Efeito ao passar/tocar no botão */
+    div.stButton > button:hover {
+        background-color: #00E676 !important;
+        background: #00E676 !important;
+        color: #000000 !important;
+        border: 1px solid #00E676 !important;
+    }
+
+    /* Ajuste de tamanho dos valores e variações */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
         font-size: 1.8rem !important;
@@ -67,7 +73,7 @@ st.image("logo.jpg", use_container_width=True)
 st.title("📈 Pre-Market Alerts")
 st.caption("Top 20 Nasdaq/NYSE stocks with ±2% minimum Gap")
 
-# Botão destacado com fundo preto e texto grande
+# Botão com fundo preto, borda fina verde e texto grande
 if st.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
 
