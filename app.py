@@ -29,7 +29,7 @@ st.markdown(
         padding-bottom: 0.2rem !important;
     }
 
-    /* Botão WhatsApp Discreto: Fundo Preto, Sem Borda, Texto Sutil */
+    /* Botão WhatsApp Discreto */
     .whatsapp-btn {
         display: block;
         background-color: #0E1117 !important;
@@ -49,7 +49,7 @@ st.markdown(
         color: #00E676 !important;
     }
 
-    /* Botão Refresh Data: Fundo Preto, Borda Verde Fina, Texto Grande */
+    /* Botão Refresh Data: Fundo Preto, Borda Verde Fina */
     div.stButton > button, div.stButton > button:focus, div.stButton > button:active {
         background-color: #000000 !important;
         background: #000000 !important;
@@ -106,7 +106,10 @@ st.markdown(
 )
 
 # Exibe o logótipo no topo
-st.image("logo.jpg", use_container_width=True)
+try:
+    st.image("logo.jpg", use_container_width=True)
+except Exception:
+    pass
 
 # Botão discreto do WhatsApp
 st.markdown(
@@ -220,38 +223,54 @@ MIN_GAP_PCT = 2.0
 
 
 @st.cache_data(ttl=300)
-def carregar_dados(tickers_list):
+def carregar_dados_lote(tickers_list):
     alertas = []
-    for ticker in tickers_list:
-        try:
-            acao = yf.Ticker(ticker)
-            hist = acao.history(period="2d")
-            if len(hist) >= 2:
-                fech_ant = hist["Close"].iloc[-2]
-                preco_atual = hist["Close"].iloc[-1]
-                gap = ((preco_atual - fech_ant) / fech_ant) * 100
+    try:
+        # Download de todas as ações em batch de uma só vez (muito mais rápido e sem travar)
+        dados = yf.download(
+            tickers_list, period="5d", progress=False, group_by="ticker"
+        )
 
-                if abs(gap) >= MIN_GAP_PCT:
-                    # Limpa o sufixo (.L, .SA, .DE) para exibição limpa
-                    ticker_clean = ticker.split(".")[0]
-                    alertas.append({
-                        "Ticker": ticker_clean,
-                        "Gap (%)": round(gap, 2),
-                        "Abs_Gap": abs(gap),
-                        "Preço": round(preco_atual, 2),
-                        "Fech. Anterior": round(fech_ant, 2),
-                    })
-        except Exception:
-            pass
+        for ticker in tickers_list:
+            try:
+                if len(tickers_list) == 1:
+                    df_ticker = dados
+                else:
+                    df_ticker = dados[ticker]
 
-    df = pd.DataFrame(alertas)
-    if not df.empty:
-        df = df.sort_values(by="Abs_Gap", ascending=False).head(20)
-    return df
+                df_clean = df_ticker.dropna(subset=["Close"])
+
+                if len(df_clean) >= 2:
+                    fech_ant = float(df_clean["Close"].iloc[-2])
+                    preco_atual = float(df_clean["Close"].iloc[-1])
+
+                    if fech_ant > 0:
+                        gap = ((preco_atual - fech_ant) / fech_ant) * 100
+
+                        if abs(gap) >= MIN_GAP_PCT:
+                            ticker_clean = ticker.split(".")[0]
+                            alertas.append({
+                                "Ticker": ticker_clean,
+                                "Gap (%)": round(gap, 2),
+                                "Abs_Gap": abs(gap),
+                                "Preço": round(preco_atual, 2),
+                                "Fech. Anterior": round(fech_ant, 2),
+                            })
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    df_resultado = pd.DataFrame(alertas)
+    if not df_resultado.empty:
+        df_resultado = df_resultado.sort_values(
+            by="Abs_Gap", ascending=False
+        ).head(20)
+    return df_resultado
 
 
 def exibir_alertas(df):
-    if not df.empty:
+    if df is not None and not df.empty:
         for index, row in df.iterrows():
             cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
             with st.container():
@@ -263,7 +282,7 @@ def exibir_alertas(df):
                 st.write(f"Previous Close: **${row['Fech. Anterior']}**")
                 st.divider()
     else:
-        st.info("No stocks met the ±2% Gap criteria in this market.")
+        st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
 # Criação das Abas no App
@@ -272,47 +291,16 @@ tab_us, tab_uk_eu, tab_br = st.tabs(
 )
 
 with tab_us:
-    dados_us = carregar_dados(US_TICKERS)
+    dados_us = carregar_dados_lote(US_TICKERS)
     exibir_alertas(dados_us)
 
 with tab_uk_eu:
-    dados_uk_eu = carregar_dados(UK_EU_TICKERS)
+    dados_uk_eu = carregar_dados_lote(UK_EU_TICKERS)
     exibir_alertas(dados_uk_eu)
 
 with tab_br:
-    dados_br = carregar_dados(BR_TICKERS)
+    dados_br = carregar_dados_lote(BR_TICKERS)
     exibir_alertas(dados_br)
-
-# Rodapé personalizado
-st.markdown("---")
-st.caption("Powered by **UKereno Global Data & Analytics**")
-                        "Preço": round(preco_atual, 2),
-                        "Fech. Anterior": round(fech_ant, 2),
-                    })
-        except Exception:
-            pass
-
-    df = pd.DataFrame(alertas)
-    if not df.empty:
-        df = df.sort_values(by="Abs_Gap", ascending=False).head(20)
-    return df
-
-
-dados = carregar_dados()
-
-if not dados.empty:
-    for index, row in dados.iterrows():
-        cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
-        with st.container():
-            st.metric(
-                label=f"{cor} {row['Ticker']}",
-                value=f"${row['Preço']}",
-                delta=f"{row['Gap (%)']}%",
-            )
-            st.write(f"Previous Close: **${row['Fech. Anterior']}**")
-            st.divider()
-else:
-    st.info("No stocks met the ±2% Gap criteria at the moment.")
 
 # Rodapé personalizado
 st.markdown("---")
