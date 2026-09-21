@@ -1,0 +1,72 @@
+import pandas as pd
+import streamlit as st
+import yfinance as yf
+
+# Configuração visual para tela de celular
+st.set_page_config(
+    page_title="Alertas de Bolsa", page_icon="📈", layout="centered"
+)
+
+st.title("📈 Alertas Pré-Mercado")
+st.caption("Ações Nasdaq/NYSE com variação mínima de ±2%")
+
+# Botão para atualizar dados manualmente
+if st.button("🔄 Atualizar Dados", use_container_width=True):
+    st.cache_data.clear()
+
+# Lista de ativos para monitorar
+TICKERS = [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "AMD",
+    "TSLA",
+    "AMZN",
+    "GOOGL",
+    "META",
+    "NFLX",
+    "INTC",
+]
+MIN_GAP_PCT = 2.0
+
+
+@st.cache_data(ttl=300)  # Guarda os dados em cache por 5 minutos
+def carregar_dados():
+    alertas = []
+    for ticker in TICKERS:
+        try:
+            acao = yf.Ticker(ticker)
+            hist = acao.history(period="2d")
+            if len(hist) >= 2:
+                fech_ant = hist["Close"].iloc[-2]
+                preco_atual = hist["Close"].iloc[-1]
+                gap = ((preco_atual - fech_ant) / fech_ant) * 100
+
+                if abs(gap) >= MIN_GAP_PCT:
+                    alertas.append({
+                        "Ticker": ticker,
+                        "Gap (%)": round(gap, 2),
+                        "Preço": round(preco_atual, 2),
+                        "Fech. Anterior": round(fech_ant, 2),
+                    })
+        except Exception:
+            pass
+    return pd.DataFrame(alertas)
+
+
+# Processamento e exibição
+dados = carregar_dados()
+
+if not dados.empty:
+    for index, row in dados.iterrows():
+        cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
+        with st.container():
+            st.metric(
+                label=f"{cor} {row['Ticker']}",
+                value=f"${row['Preço']}",
+                delta=f"{row['Gap (%)']}%",
+            )
+            st.write(f"Fechamento anterior: **${row['Fech. Anterior']}**")
+            st.divider()
+else:
+    st.info("Nenhum ativo atingiu o critério de ±2% de Gap no momento.")
