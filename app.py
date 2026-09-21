@@ -72,14 +72,15 @@ st.markdown(
 
     /* Estilo das Abas (Tabs) */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 6px;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #161B22 !important;
         border-radius: 6px !important;
         color: #B0BEC5 !important;
-        padding: 8px 16px !important;
+        padding: 6px 12px !important;
         font-weight: 600 !important;
+        font-size: 0.85rem !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #00E676 !important;
@@ -119,7 +120,7 @@ st.markdown(
 
 # Título em inglês e sub-título
 st.title("📈 UKereno Global Market Alerts")
-st.caption("Top Movers with ±2% Minimum Gap Across Global Markets")
+st.caption("Top Movers with ±2% Minimum Gap Across World Markets")
 
 # Botão de atualização
 if st.button("🔄 Refresh Data", use_container_width=True):
@@ -200,6 +201,21 @@ UK_EU_TICKERS = [
     "SIE.DE",
 ]
 
+ASIA_TICKERS = [
+    "2330.TW",
+    "0700.HK",
+    "9988.HK",
+    "7203.T",
+    "6758.T",
+    "9984.T",
+    "3690.HK",
+    "1810.HK",
+    "0941.HK",
+    "RELIANCE.NS",
+    "TCS.NS",
+    "INFY.NS",
+]
+
 BR_TICKERS = [
     "PETR4.SA",
     "VALE3.SA",
@@ -226,7 +242,6 @@ MIN_GAP_PCT = 2.0
 def carregar_dados_lote(tickers_list):
     alertas = []
     try:
-        # Download de todas as ações em batch de uma só vez (muito mais rápido e sem travar)
         dados = yf.download(
             tickers_list, period="5d", progress=False, group_by="ticker"
         )
@@ -285,9 +300,9 @@ def exibir_alertas(df):
         st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
-# Criação das Abas no App
-tab_us, tab_uk_eu, tab_br = st.tabs(
-    ["🇺🇸 US Pre-Market", "🇬🇧 UK & Europe", "🇧🇷 Brasil (B3)"]
+# Criação das 4 Abas Globais
+tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
+    ["🇺🇸 US", "🇬🇧 UK/EU", "🌏 Asia", "🇧🇷 Brasil"]
 )
 
 with tab_us:
@@ -297,6 +312,10 @@ with tab_us:
 with tab_uk_eu:
     dados_uk_eu = carregar_dados_lote(UK_EU_TICKERS)
     exibir_alertas(dados_uk_eu)
+
+with tab_asia:
+    dados_asia = carregar_dados_lote(ASIA_TICKERS)
+    exibir_alertas(dados_asia)
 
 with tab_br:
     dados_br = carregar_dados_lote(BR_TICKERS)
