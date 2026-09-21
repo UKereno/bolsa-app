@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilo CSS para fundo escuro e ajuste de tamanho das fontes
+# Estilo CSS avançado para Dark Mode, botão destacado e métricas maiores
 st.markdown(
     """
     <style>
@@ -16,18 +16,43 @@ st.markdown(
         background-color: #0E1117;
         color: #FAFAFA;
     }
+    
     /* Reduzir o tamanho do título principal */
     h1 {
         font-size: 1.6rem !important;
         padding-top: 0.5rem !important;
         padding-bottom: 0.2rem !important;
     }
-    /* Estilo do valor e rótulo das métricas */
+
+    /* Customização do Botão Refresh Data */
+    div.stButton > button {
+        background-color: #1E2638 !important;
+        color: #00E676 !important;
+        font-size: 1.15rem !important;
+        font-weight: bold !important;
+        border: 2px solid #00E676 !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    div.stButton > button:hover {
+        background-color: #00E676 !important;
+        color: #0E1117 !important;
+    }
+
+    /* Aumentar em ~20% o tamanho dos valores e variações (flexinhas) */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
+        font-size: 1.8rem !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 1.25rem !important;
+        font-weight: bold !important;
     }
     [data-testid="stMetricLabel"] {
         color: #B0BEC5 !important;
+        font-size: 1.1rem !important;
     }
     </style>
     """,
@@ -39,13 +64,15 @@ st.image("logo.jpg", use_container_width=True)
 
 # Título em inglês e tamanho ajustado
 st.title("📈 Pre-Market Alerts")
-st.caption("Monitoring Nasdaq/NYSE stocks with ±2% minimum Gap")
+st.caption("Top 20 Nasdaq/NYSE stocks with ±2% minimum Gap")
 
-# Botão para atualizar dados manualmente
+# Botão destacado para atualizar dados
 if st.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
 
-# Lista de ações monitorizadas
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Lista de 50 ações ativas para extrair o Top 20
 TICKERS = [
     "AAPL",
     "MSFT",
@@ -57,7 +84,48 @@ TICKERS = [
     "META",
     "NFLX",
     "INTC",
+    "SMCI",
+    "PLTR",
+    "AVGO",
+    "QCOM",
+    "ARM",
+    "MU",
+    "PYPL",
+    "SQ",
+    "COIN",
+    "MARA",
+    "BAC",
+    "JPM",
+    "C",
+    "GS",
+    "MS",
+    "XOM",
+    "CVX",
+    "PBR",
+    "VALE",
+    "NKE",
+    "DIS",
+    "SBUX",
+    "BABA",
+    "PDD",
+    "JD",
+    "NIO",
+    "LI",
+    "XPEV",
+    "MRNA",
+    "BNTX",
+    "PFE",
+    "LLY",
+    "NVO",
+    "UNH",
+    "UBER",
+    "ABNB",
+    "DASH",
+    "SPOT",
+    "SHOP",
+    "CRWD",
 ]
+
 MIN_GAP_PCT = 2.0
 
 
@@ -77,12 +145,17 @@ def carregar_dados():
                     alertas.append({
                         "Ticker": ticker,
                         "Gap (%)": round(gap, 2),
+                        "Abs_Gap": abs(gap),
                         "Preço": round(preco_atual, 2),
                         "Fech. Anterior": round(fech_ant, 2),
                     })
         except Exception:
             pass
-    return pd.DataFrame(alertas)
+
+    df = pd.DataFrame(alertas)
+    if not df.empty:
+        df = df.sort_values(by="Abs_Gap", ascending=False).head(20)
+    return df
 
 
 dados = carregar_dados()
@@ -100,6 +173,10 @@ if not dados.empty:
             st.divider()
 else:
     st.info("No stocks met the ±2% Gap criteria at the moment.")
+
+# Rodapé personalizado
+st.markdown("---")
+st.caption("Powered by **UKereno Global Data & Analytics**")
 
 # Rodapé personalizado
 st.markdown("---")
