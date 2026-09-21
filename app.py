@@ -102,15 +102,6 @@ st.markdown(
         color: #000000 !important;
     }
 
-    /* Cards de Ativos */
-    .stock-card {
-        background-color: #161B22;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 12px;
-        border-left: 4px solid #30363D;
-    }
-
     /* Ajuste de métricas */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
@@ -274,29 +265,35 @@ def carregar_dados_lote(tickers_list):
 
         for ticker in tickers_list:
             try:
+                # Trata estrutura caso só tenha 1 ticker ou múltiplos
                 if len(tickers_list) == 1:
                     df_ticker = dados
                 else:
-                    df_ticker = dados[ticker]
+                    if ticker in dados:
+                        df_ticker = dados[ticker]
+                    else:
+                        continue
 
-                df_clean = df_ticker.dropna(subset=["Close"])
+                # Garante que é um DataFrame e possui a coluna 'Close'
+                if isinstance(df_ticker, pd.DataFrame) and "Close" in df_ticker:
+                    df_clean = df_ticker.dropna(subset=["Close"])
 
-                if len(df_clean) >= 2:
-                    fech_ant = float(df_clean["Close"].iloc[-2])
-                    preco_atual = float(df_clean["Close"].iloc[-1])
+                    if len(df_clean) >= 2:
+                        fech_ant = float(df_clean["Close"].iloc[-2])
+                        preco_atual = float(df_clean["Close"].iloc[-1])
 
-                    if fech_ant > 0:
-                        gap = ((preco_atual - fech_ant) / fech_ant) * 100
+                        if fech_ant > 0:
+                            gap = ((preco_atual - fech_ant) / fech_ant) * 100
 
-                        if abs(gap) >= MIN_GAP_PCT:
-                            ticker_clean = ticker.split(".")[0]
-                            alertas.append({
-                                "Ticker": ticker_clean,
-                                "Gap (%)": round(gap, 2),
-                                "Abs_Gap": abs(gap),
-                                "Preço": round(preco_atual, 2),
-                                "Fech. Anterior": round(fech_ant, 2),
-                            })
+                            if abs(gap) >= MIN_GAP_PCT:
+                                ticker_clean = ticker.split(".")[0]
+                                alertas.append({
+                                    "Ticker": ticker_clean,
+                                    "Gap (%)": round(gap, 2),
+                                    "Abs_Gap": abs(gap),
+                                    "Preço": round(preco_atual, 2),
+                                    "Fech. Anterior": round(fech_ant, 2),
+                                })
             except Exception:
                 continue
     except Exception:
@@ -312,7 +309,6 @@ def carregar_dados_lote(tickers_list):
 
 def exibir_alertas_grelha(df):
     if df is not None and not df.empty:
-        # Exibição em grelha (2 colunas) para preencher a largura da tela
         cols = st.columns(2)
         for idx, row in df.iterrows():
             col = cols[idx % 2]
@@ -330,7 +326,7 @@ def exibir_alertas_grelha(df):
         st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
-# Criação das 4 Abas com os Nomes Completos e Ancho 100%
+# Criação das 4 Abas
 tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
     ["🇺🇸 US Pre-Market", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
 )
@@ -350,35 +346,6 @@ with tab_asia:
 with tab_br:
     dados_br = carregar_dados_lote(BR_TICKERS)
     exibir_alertas_grelha(dados_br)
-
-# Rodapé personalizado
-st.markdown("---")
-st.caption("Powered by **UKereno Global Data & Analytics**")
-                st.divider()
-    else:
-        st.info("No stocks met the ±2% Gap criteria in this market right now.")
-
-
-# Criação das 4 Abas Globais
-tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
-    ["🇺🇸 US", "🇬🇧 UK/EU", "🌏 Asia", "🇧🇷 Brasil"]
-)
-
-with tab_us:
-    dados_us = carregar_dados_lote(US_TICKERS)
-    exibir_alertas(dados_us)
-
-with tab_uk_eu:
-    dados_uk_eu = carregar_dados_lote(UK_EU_TICKERS)
-    exibir_alertas(dados_uk_eu)
-
-with tab_asia:
-    dados_asia = carregar_dados_lote(ASIA_TICKERS)
-    exibir_alertas(dados_asia)
-
-with tab_br:
-    dados_br = carregar_dados_lote(BR_TICKERS)
-    exibir_alertas(dados_br)
 
 # Rodapé personalizado
 st.markdown("---")
