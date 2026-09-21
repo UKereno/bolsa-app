@@ -1,13 +1,19 @@
+import requests
 import pandas as pd
 import streamlit as st
 import yfinance as yf
+
+# Link do Grupo do WhatsApp do UKereno Alerts
+WHATSAPP_GROUP_LINK = (
+    "https://chat.whatsapp.com/K3euCPlQmNJFrnalbtPQ0R?mode=gi_t"
+)
 
 # Configuração visual da página para telemóvel
 st.set_page_config(
     page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilo CSS estrito: Botão Preto, Borda Verde Fina, Texto Grande
+# Estilo CSS estrito: Dark Mode, Botão Preto com Borda Verde, Botão WhatsApp e Métricas Maiores
 st.markdown(
     """
     <style>
@@ -17,29 +23,27 @@ st.markdown(
         color: #FAFAFA !important;
     }
     
-    /* Reduzir o tamanho do título principal */
+    /* Título principal */
     h1 {
         font-size: 1.6rem !important;
         padding-top: 0.5rem !important;
         padding-bottom: 0.2rem !important;
     }
 
-    /* Forçar estilização do Botão Refresh Data */
+    /* Botão Refresh Data: Fundo Preto, Borda Verde Fina, Texto Grande */
     div.stButton > button, div.stButton > button:focus, div.stButton > button:active {
         background-color: #000000 !important;
         background: #000000 !important;
         color: #00E676 !important;
-        font-size: 1.5rem !important; /* Letras internas maiores */
+        font-size: 1.5rem !important;
         font-weight: 900 !important;
-        border: 1px solid #00E676 !important; /* Bordinha verde bem pequena (1px) */
+        border: 1px solid #00E676 !important;
         border-radius: 8px !important;
         padding: 0.8rem 1rem !important;
         width: 100% !important;
         box-shadow: none !important;
         outline: none !important;
     }
-
-    /* Efeito ao passar/tocar no botão */
     div.stButton > button:hover {
         background-color: #00E676 !important;
         background: #00E676 !important;
@@ -47,7 +51,26 @@ st.markdown(
         border: 1px solid #00E676 !important;
     }
 
-    /* Ajuste de tamanho dos valores e variações */
+    /* Botão WhatsApp em Verde de Destaque */
+    .whatsapp-btn {
+        display: block;
+        background-color: #25D366;
+        color: #FFFFFF !important;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .whatsapp-btn:hover {
+        background-color: #1EBE5D;
+        color: #FFFFFF !important;
+    }
+
+    /* Ajuste do tamanho de métricas e variações */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
         font-size: 1.8rem !important;
@@ -69,17 +92,23 @@ st.markdown(
 # Exibe o logótipo no topo
 st.image("logo.jpg", use_container_width=True)
 
-# Título em inglês e tamanho ajustado
+# Botão VIP do WhatsApp no topo
+st.markdown(
+    f'<a href="{WHATSAPP_GROUP_LINK}" target="_blank" class="whatsapp-btn">📱 Join VIP WhatsApp Group</a>',
+    unsafe_allow_html=True,
+)
+
+# Título em inglês e sub-título
 st.title("📈 Pre-Market Alerts")
 st.caption("Top 20 Nasdaq/NYSE stocks with ±2% minimum Gap")
 
-# Botão com fundo preto, borda fina verde e texto grande
+# Botão de atualização
 if st.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Lista de 50 ações ativas para extrair o Top 20
+# Lista das 50 maiores ações ativas dos EUA
 TICKERS = [
     "AAPL",
     "MSFT",
