@@ -7,12 +7,12 @@ WHATSAPP_GROUP_LINK = (
     "https://chat.whatsapp.com/K3euCPlQmNJFrnalbtPQ0R?mode=gi_t"
 )
 
-# Configuração visual da página para telemóvel
+# Configuração visual da página
 st.set_page_config(
-    page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
+    page_title="UKereno | Global Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilo CSS avançado: Dark Mode, Botão WhatsApp Discreto (Preto sem Borda) e Botão Refresh
+# Estilo CSS avançado: Dark Mode, Botão WhatsApp Discreto (Preto sem Borda), Botão Refresh e Abas Estilizadas
 st.markdown(
     """
     <style>
@@ -70,7 +70,23 @@ st.markdown(
         border: 1px solid #00E676 !important;
     }
 
-    /* Ajuste de métricas e variações */
+    /* Estilo das Abas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #161B22 !important;
+        border-radius: 6px !important;
+        color: #B0BEC5 !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #00E676 !important;
+        color: #000000 !important;
+    }
+
+    /* Ajuste de métricas */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
         font-size: 1.8rem !important;
@@ -99,8 +115,8 @@ st.markdown(
 )
 
 # Título em inglês e sub-título
-st.title("📈 Pre-Market Alerts")
-st.caption("Top 20 Nasdaq/NYSE stocks with ±2% minimum Gap")
+st.title("📈 UKereno Global Market Alerts")
+st.caption("Top Movers with ±2% Minimum Gap Across Global Markets")
 
 # Botão de atualização
 if st.button("🔄 Refresh Data", use_container_width=True):
@@ -108,8 +124,8 @@ if st.button("🔄 Refresh Data", use_container_width=True):
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Lista de 50 ações ativas para extrair o Top 20
-TICKERS = [
+# Listas de Tickers por Região
+US_TICKERS = [
     "AAPL",
     "MSFT",
     "NVDA",
@@ -162,13 +178,51 @@ TICKERS = [
     "CRWD",
 ]
 
+UK_EU_TICKERS = [
+    "SHEL.L",
+    "AZN.L",
+    "HSBA.L",
+    "BP.L",
+    "RIO.L",
+    "GSK.L",
+    "ULVR.L",
+    "REL.L",
+    "BATS.L",
+    "PRU.L",
+    "SAP.DE",
+    "ASML.AS",
+    "TTE.PA",
+    "MC.PA",
+    "OR.PA",
+    "SIE.DE",
+]
+
+BR_TICKERS = [
+    "PETR4.SA",
+    "VALE3.SA",
+    "ITUB4.SA",
+    "BBDC4.SA",
+    "BBAS3.SA",
+    "ABEV3.SA",
+    "WEGE3.SA",
+    "RENT3.SA",
+    "PRIO3.SA",
+    "ELET3.SA",
+    "GGBR4.SA",
+    "CSNA3.SA",
+    "SUZB3.SA",
+    "JBSS3.SA",
+    "MGLU3.SA",
+    "B3SA3.SA",
+]
+
 MIN_GAP_PCT = 2.0
 
 
 @st.cache_data(ttl=300)
-def carregar_dados():
+def carregar_dados(tickers_list):
     alertas = []
-    for ticker in TICKERS:
+    for ticker in tickers_list:
         try:
             acao = yf.Ticker(ticker)
             hist = acao.history(period="2d")
@@ -178,10 +232,60 @@ def carregar_dados():
                 gap = ((preco_atual - fech_ant) / fech_ant) * 100
 
                 if abs(gap) >= MIN_GAP_PCT:
+                    # Limpa o sufixo (.L, .SA, .DE) para exibição limpa
+                    ticker_clean = ticker.split(".")[0]
                     alertas.append({
-                        "Ticker": ticker,
+                        "Ticker": ticker_clean,
                         "Gap (%)": round(gap, 2),
                         "Abs_Gap": abs(gap),
+                        "Preço": round(preco_atual, 2),
+                        "Fech. Anterior": round(fech_ant, 2),
+                    })
+        except Exception:
+            pass
+
+    df = pd.DataFrame(alertas)
+    if not df.empty:
+        df = df.sort_values(by="Abs_Gap", ascending=False).head(20)
+    return df
+
+
+def exibir_alertas(df):
+    if not df.empty:
+        for index, row in df.iterrows():
+            cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
+            with st.container():
+                st.metric(
+                    label=f"{cor} {row['Ticker']}",
+                    value=f"${row['Preço']}",
+                    delta=f"{row['Gap (%)']}%",
+                )
+                st.write(f"Previous Close: **${row['Fech. Anterior']}**")
+                st.divider()
+    else:
+        st.info("No stocks met the ±2% Gap criteria in this market.")
+
+
+# Criação das Abas no App
+tab_us, tab_uk_eu, tab_br = st.tabs(
+    ["🇺🇸 US Pre-Market", "🇬🇧 UK & Europe", "🇧🇷 Brasil (B3)"]
+)
+
+with tab_us:
+    dados_us = carregar_dados(US_TICKERS)
+    exibir_alertas(dados_us)
+
+with tab_uk_eu:
+    dados_uk_eu = carregar_dados(UK_EU_TICKERS)
+    exibir_alertas(dados_uk_eu)
+
+with tab_br:
+    dados_br = carregar_dados(BR_TICKERS)
+    exibir_alertas(dados_br)
+
+# Rodapé personalizado
+st.markdown("---")
+st.caption("Powered by **UKereno Global Data & Analytics**")
                         "Preço": round(preco_atual, 2),
                         "Fech. Anterior": round(fech_ant, 2),
                     })
