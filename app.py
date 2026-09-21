@@ -7,11 +7,11 @@ st.set_page_config(
     page_title="UKereno | Pre-Market Alerts", page_icon="📈", layout="centered"
 )
 
-# Estilo CSS avançado para Dark Mode, botão destacado e métricas maiores
+# Estilo CSS avançado para Dark Mode, botão preto com borda verde e texto grande
 st.markdown(
     """
     <style>
-    /* Fundo escuro */
+    /* Fundo escuro geral */
     .stApp {
         background-color: #0E1117;
         color: #FAFAFA;
@@ -24,15 +24,16 @@ st.markdown(
         padding-bottom: 0.2rem !important;
     }
 
-    /* Customização do Botão Refresh Data */
+    /* Botão Refresh Data: Fundo Preto, Borda Verde Neon e Texto Grande */
     div.stButton > button {
-        background-color: #1E2638 !important;
+        background-color: #0E1117 !important;
         color: #00E676 !important;
-        font-size: 1.15rem !important;
-        font-weight: bold !important;
+        font-size: 1.4rem !important; /* Texto aumentado significativamente */
+        font-weight: 800 !important;
         border: 2px solid #00E676 !important;
-        border-radius: 10px !important;
-        padding: 0.6rem 1rem !important;
+        border-radius: 12px !important;
+        padding: 0.8rem 1.2rem !important;
+        width: 100% !important;
         transition: all 0.3s ease !important;
     }
     div.stButton > button:hover {
@@ -40,7 +41,7 @@ st.markdown(
         color: #0E1117 !important;
     }
 
-    /* Aumentar em ~20% o tamanho dos valores e variações (flexinhas) */
+    /* Aumentar em 20% o tamanho dos valores e variações */
     [data-testid="stMetricValue"] {
         color: #FAFAFA !important;
         font-size: 1.8rem !important;
@@ -66,7 +67,7 @@ st.image("logo.jpg", use_container_width=True)
 st.title("📈 Pre-Market Alerts")
 st.caption("Top 20 Nasdaq/NYSE stocks with ±2% minimum Gap")
 
-# Botão destacado para atualizar dados
+# Botão destacado com fundo preto e texto grande
 if st.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
 
@@ -173,10 +174,6 @@ if not dados.empty:
             st.divider()
 else:
     st.info("No stocks met the ±2% Gap criteria at the moment.")
-
-# Rodapé personalizado
-st.markdown("---")
-st.caption("Powered by **UKereno Global Data & Analytics**")
 
 # Rodapé personalizado
 st.markdown("---")
