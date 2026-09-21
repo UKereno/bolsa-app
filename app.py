@@ -7,12 +7,12 @@ WHATSAPP_GROUP_LINK = (
     "https://chat.whatsapp.com/K3euCPlQmNJFrnalbtPQ0R?mode=gi_t"
 )
 
-# Configuração visual da página
+# Configuração visual da página - layout "wide" para ocupar 100% da tela
 st.set_page_config(
-    page_title="UKereno | Global Market Alerts", page_icon="📈", layout="centered"
+    page_title="UKereno | Global Market Alerts", page_icon="📈", layout="wide"
 )
 
-# Estilo CSS avançado: Dark Mode, Botão WhatsApp Discreto (Preto sem Borda), Botão Refresh e Abas Estilizadas
+# Estilo CSS avançado: Dark Mode, Botão WhatsApp, Botão Refresh e Abas Largas
 st.markdown(
     """
     <style>
@@ -22,11 +22,21 @@ st.markdown(
         color: #FAFAFA !important;
     }
     
+    /* Remoção de margens para aproveitar toda a largura */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 100% !important;
+    }
+
     /* Título principal */
     h1 {
-        font-size: 1.6rem !important;
+        font-size: 1.8rem !important;
         padding-top: 0.5rem !important;
         padding-bottom: 0.2rem !important;
+        text-align: center;
     }
 
     /* Botão WhatsApp Discreto */
@@ -35,9 +45,9 @@ st.markdown(
         background-color: #0E1117 !important;
         color: #25D366 !important;
         text-align: center;
-        font-size: 1rem !important;
+        font-size: 1.1rem !important;
         font-weight: 600 !important;
-        padding: 0.5rem 1rem !important;
+        padding: 0.6rem 1rem !important;
         border: none !important;
         border-radius: 8px !important;
         text-decoration: none !important;
@@ -70,21 +80,35 @@ st.markdown(
         border: 1px solid #00E676 !important;
     }
 
-    /* Estilo das Abas (Tabs) */
+    /* Estilo das Abas (Tabs) para Ocupar toda a Largura */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
+        gap: 8px;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
     }
     .stTabs [data-baseweb="tab"] {
+        flex: 1 !important;
+        text-align: center !important;
         background-color: #161B22 !important;
         border-radius: 6px !important;
         color: #B0BEC5 !important;
-        padding: 6px 12px !important;
+        padding: 10px 16px !important;
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
+        font-size: 1rem !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #00E676 !important;
         color: #000000 !important;
+    }
+
+    /* Cards de Ativos */
+    .stock-card {
+        background-color: #161B22;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        border-left: 4px solid #30363D;
     }
 
     /* Ajuste de métricas */
@@ -106,11 +130,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Exibe o logótipo no topo
-try:
-    st.image("logo.jpg", use_container_width=True)
-except Exception:
-    pass
+# Exibe o logótipo centralizado
+col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 2, 1])
+with col_logo_2:
+    try:
+        st.image("logo.jpg", use_container_width=True)
+    except Exception:
+        pass
 
 # Botão discreto do WhatsApp
 st.markdown(
@@ -284,17 +310,50 @@ def carregar_dados_lote(tickers_list):
     return df_resultado
 
 
-def exibir_alertas(df):
+def exibir_alertas_grelha(df):
     if df is not None and not df.empty:
-        for index, row in df.iterrows():
+        # Exibição em grelha (2 colunas) para preencher a largura da tela
+        cols = st.columns(2)
+        for idx, row in df.iterrows():
+            col = cols[idx % 2]
             cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
-            with st.container():
-                st.metric(
-                    label=f"{cor} {row['Ticker']}",
-                    value=f"${row['Preço']}",
-                    delta=f"{row['Gap (%)']}%",
-                )
-                st.write(f"Previous Close: **${row['Fech. Anterior']}**")
+            with col:
+                with st.container():
+                    st.metric(
+                        label=f"{cor} {row['Ticker']}",
+                        value=f"${row['Preço']}",
+                        delta=f"{row['Gap (%)']}%",
+                    )
+                    st.write(f"Previous Close: **${row['Fech. Anterior']}**")
+                    st.divider()
+    else:
+        st.info("No stocks met the ±2% Gap criteria in this market right now.")
+
+
+# Criação das 4 Abas com os Nomes Completos e Ancho 100%
+tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
+    ["🇺🇸 US Pre-Market", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
+)
+
+with tab_us:
+    dados_us = carregar_dados_lote(US_TICKERS)
+    exibir_alertas_grelha(dados_us)
+
+with tab_uk_eu:
+    dados_uk_eu = carregar_dados_lote(UK_EU_TICKERS)
+    exibir_alertas_grelha(dados_uk_eu)
+
+with tab_asia:
+    dados_asia = carregar_dados_lote(ASIA_TICKERS)
+    exibir_alertas_grelha(dados_asia)
+
+with tab_br:
+    dados_br = carregar_dados_lote(BR_TICKERS)
+    exibir_alertas_grelha(dados_br)
+
+# Rodapé personalizado
+st.markdown("---")
+st.caption("Powered by **UKereno Global Data & Analytics**")
                 st.divider()
     else:
         st.info("No stocks met the ±2% Gap criteria in this market right now.")
