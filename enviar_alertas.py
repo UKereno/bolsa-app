@@ -5,35 +5,33 @@ import yfinance as yf
 # Configurações da Z-API
 INSTANCE_ID = os.environ.get("ZAPI_INSTANCE_ID")
 TOKEN = os.environ.get("ZAPI_TOKEN")
-CLIENT_TOKEN = os.environ.get("ZAPI_CLIENT_TOKEN")
 
-# Prepara os cabeçalhos (omite Client-Token se for idêntico ao Token da instância)
-HEADERS = {"Content-Type": "application/json"}
-if CLIENT_TOKEN and CLIENT_TOKEN != TOKEN:
-    HEADERS["Client-Token"] = CLIENT_TOKEN
+HEADERS = {
+    "Content-Type": "application/json"
+}
 
 def obter_id_do_grupo():
-    # 1. Tenta listar os chats da instância
+    # 1. Tenta encontrar o grupo na lista de chats ativos
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{TOKEN}/chats"
     try:
         response = requests.get(url, headers=HEADERS)
-        print(f"Status resposta chats ({response.status_code}): {response.text}")
+        print(f"Status busca chats: {response.status_code}")
         if response.status_code == 200:
             chats = response.json()
             for chat in chats:
                 name = str(chat.get("name", "")) or str(chat.get("phone", ""))
                 if "UKereno" in name or "Pre-Market" in name:
                     group_phone = chat.get("phone") or chat.get("id")
-                    print(f"Grupo localizado via chats: {name} ({group_phone})")
+                    print(f"Grupo localizado: {name} ({group_phone})")
                     return group_phone
     except Exception as e:
-        print(f"Erro ao procurar nos chats: {e}")
+        print(f"Erro ao buscar nos chats: {e}")
 
-    # 2. Tenta obter via convite
+    # 2. Tenta via link/metadados de convite caso não esteja na lista de chats
     url_invite = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{TOKEN}/group-metadata/K3euCPlQmNJFrnalbtPQ0R"
     try:
         res = requests.get(url_invite, headers=HEADERS)
-        print(f"Status resposta convite ({res.status_code}): {res.text}")
+        print(f"Status busca convite: {res.status_code}")
         if res.status_code == 200:
             return res.json().get("phone") or res.json().get("id")
     except Exception as e:
@@ -54,7 +52,7 @@ def enviar_mensagem(phone, texto):
 def main():
     group_id = obter_id_do_grupo()
     if not group_id:
-        print("Não foi possível localizar o ID do grupo.")
+        print("Não foi possível identificar o ID do grupo.")
         return
 
     tickers = {"S&P 500": "^GSPC", "Nasdaq": "^IXIC", "FTSE 100": "^FTSE"}
