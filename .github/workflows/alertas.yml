@@ -1,0 +1,28 @@
+name: Enviar Alertas WhatsApp
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # Executa automaticamente todos os dias às 08:00 UTC
+  workflow_dispatch: # Permite disparar o teste manualmente pelo botão no GitHub
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Dependências
+        run: pip install requests yfinance pandas
+
+      - name: Executar Script de Alertas
+        env:
+          ZAPI_INSTANCE_ID: ${{ secrets.ZAPI_INSTANCE_ID }}
+          ZAPI_TOKEN: ${{ secrets.ZAPI_TOKEN }}
+          ZAPI_CLIENT_TOKEN: ${{ secrets.ZAPI_CLIENT_TOKEN }}
+        run: python enviar_alertas.py
