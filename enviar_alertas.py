@@ -7,34 +7,38 @@ INSTANCE_ID = os.environ.get("ZAPI_INSTANCE_ID")
 TOKEN = os.environ.get("ZAPI_TOKEN")
 CLIENT_TOKEN = os.environ.get("ZAPI_CLIENT_TOKEN")
 
-HEADERS = {
-    "Client-Token": CLIENT_TOKEN,
-    "Content-Type": "application/json"
-}
+# Prepara os cabeçalhos (omite Client-Token se for idêntico ao Token da instância)
+HEADERS = {"Content-Type": "application/json"}
+if CLIENT_TOKEN and CLIENT_TOKEN != TOKEN:
+    HEADERS["Client-Token"] = CLIENT_TOKEN
 
 def obter_id_do_grupo():
-    # Procura o ID do grupo na lista de chats ativos
+    # 1. Tenta listar os chats da instância
     url = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{TOKEN}/chats"
     try:
         response = requests.get(url, headers=HEADERS)
+        print(f"Status resposta chats ({response.status_code}): {response.text}")
         if response.status_code == 200:
             chats = response.json()
             for chat in chats:
-                name = chat.get("name", "") or chat.get("phone", "")
+                name = str(chat.get("name", "")) or str(chat.get("phone", ""))
                 if "UKereno" in name or "Pre-Market" in name:
-                    return chat.get("phone") or chat.get("id")
+                    group_phone = chat.get("phone") or chat.get("id")
+                    print(f"Grupo localizado via chats: {name} ({group_phone})")
+                    return group_phone
     except Exception as e:
-        print(f"Erro ao procurar chats: {e}")
-    
-    # Caso não encontre na lista, usa o convite de grupo
+        print(f"Erro ao procurar nos chats: {e}")
+
+    # 2. Tenta obter via convite
     url_invite = f"https://api.z-api.io/instances/{INSTANCE_ID}/token/{TOKEN}/group-metadata/K3euCPlQmNJFrnalbtPQ0R"
     try:
         res = requests.get(url_invite, headers=HEADERS)
+        print(f"Status resposta convite ({res.status_code}): {res.text}")
         if res.status_code == 200:
-            return res.json().get("phone")
+            return res.json().get("phone") or res.json().get("id")
     except Exception as e:
         print(f"Erro ao consultar convite: {e}")
-        
+
     return None
 
 def enviar_mensagem(phone, texto):
@@ -45,20 +49,17 @@ def enviar_mensagem(phone, texto):
     }
     res = requests.post(url, json=payload, headers=HEADERS)
     print(f"Status do envio: {res.status_code}")
-    print(f"Resposta da Z-API: {res.text}")
+    print(f"Resposta do envio: {res.text}")
 
 def main():
     group_id = obter_id_do_grupo()
     if not group_id:
-        print("Não foi possível localizar o ID do grupo UKereno Pre-Market VIP.")
+        print("Não foi possível localizar o ID do grupo.")
         return
 
-    print(f"Grupo localizado com sucesso: {group_id}")
-
-    # Coleta de dados simples para teste
     tickers = {"S&P 500": "^GSPC", "Nasdaq": "^IXIC", "FTSE 100": "^FTSE"}
     linhas = ["📊 *ALERTAS DE PRE-MARKET UKereno*\n"]
-    
+
     for nome, ticker in tickers.items():
         try:
             dados = yf.Ticker(ticker).history(period="2d")
@@ -69,7 +70,7 @@ def main():
                 sinal = "+" if var >= 0 else ""
                 linhas.append(f"• *{nome}*: {atual:.2f} ({sinal}{var:.2f}%)")
         except Exception as e:
-            print(f"Erro ao buscar {nome}: {e}")
+            print(f"Erro no ticker {nome}: {e}")
 
     mensagem = "\n".join(linhas)
     enviar_mensagem(group_id, mensagem)
