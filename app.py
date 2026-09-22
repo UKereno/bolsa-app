@@ -1,15 +1,151 @@
-import os
 import pandas as pd
-import requests
+import streamlit as st
 import yfinance as yf
 
-# Variáveis de Ambiente obtidas via Secrets do GitHub
-API_URL = os.getenv("EVOLUTION_API_URL")
-API_KEY = os.getenv("EVOLUTION_API_KEY")
-INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE", "UKerenoAlerts")
-GROUP_JID = os.getenv("WHATSAPP_GROUP_ID")
+# Link do Grupo do WhatsApp do UKereno Alerts
+WHATSAPP_GROUP_LINK = (
+    "https://chat.whatsapp.com/K3euCPlQmNJFrnalbtPQ0R?mode=gi_t"
+)
 
-# Listas de Tickers
+# Configuração visual da página - layout "wide" para ocupar 100% da tela
+st.set_page_config(
+    page_title="UKereno | Global Market Alerts", page_icon="📈", layout="wide"
+)
+
+# Estilo CSS avançado: Dark Mode, Botão WhatsApp, Botão Refresh e Abas Largas
+st.markdown(
+    """
+    <style>
+    /* Fundo escuro geral */
+    .stApp {
+        background-color: #0E1117 !important;
+        color: #FAFAFA !important;
+    }
+    
+    /* Remoção de margens para aproveitar toda a largura */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Título principal */
+    h1 {
+        font-size: 1.8rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.2rem !important;
+        text-align: center;
+    }
+
+    /* Botão WhatsApp Discreto */
+    .whatsapp-btn {
+        display: block;
+        background-color: #0E1117 !important;
+        color: #25D366 !important;
+        text-align: center;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1rem !important;
+        border: none !important;
+        border-radius: 8px !important;
+        text-decoration: none !important;
+        margin-bottom: 1.2rem !important;
+        transition: all 0.2s ease !important;
+    }
+    .whatsapp-btn:hover {
+        background-color: #161B22 !important;
+        color: #00E676 !important;
+    }
+
+    /* Botão Refresh Data: Fundo Preto, Borda Verde Fina */
+    div.stButton > button, div.stButton > button:focus, div.stButton > button:active {
+        background-color: #000000 !important;
+        background: #000000 !important;
+        color: #00E676 !important;
+        font-size: 1.5rem !important;
+        font-weight: 900 !important;
+        border: 1px solid #00E676 !important;
+        border-radius: 8px !important;
+        padding: 0.8rem 1rem !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    div.stButton > button:hover {
+        background-color: #00E676 !important;
+        background: #00E676 !important;
+        color: #000000 !important;
+        border: 1px solid #00E676 !important;
+    }
+
+    /* Estilo das Abas (Tabs) para Ocupar toda a Largura */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        flex: 1 !important;
+        text-align: center !important;
+        background-color: #161B22 !important;
+        border-radius: 6px !important;
+        color: #B0BEC5 !important;
+        padding: 10px 16px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #00E676 !important;
+        color: #000000 !important;
+    }
+
+    /* Ajuste de métricas */
+    [data-testid="stMetricValue"] {
+        color: #FAFAFA !important;
+        font-size: 1.8rem !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: 1.25rem !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #B0BEC5 !important;
+        font-size: 1.1rem !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Exibe o logótipo centralizado
+col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 2, 1])
+with col_logo_2:
+    try:
+        st.image("logo.jpg", use_container_width=True)
+    except Exception:
+        pass
+
+# Botão discreto do WhatsApp
+st.markdown(
+    f'<a href="{WHATSAPP_GROUP_LINK}" target="_blank" class="whatsapp-btn">💬 Join VIP WhatsApp Group</a>',
+    unsafe_allow_html=True,
+)
+
+# Título em inglês e sub-título
+st.title("📈 UKereno Global Market Alerts")
+st.caption("Top Movers with ±2% Minimum Gap Across World Markets")
+
+# Botão de atualização
+if st.button("🔄 Refresh Data", use_container_width=True):
+    st.cache_data.clear()
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Listas Expandidas de Tickers por Região
 US_TICKERS = [
     "AAPL",
     "MSFT",
@@ -63,29 +199,185 @@ US_TICKERS = [
     "CRWD",
 ]
 
+UK_EU_TICKERS = [
+    # Reino Unido (LSE)
+    "SHEL.L",
+    "AZN.L",
+    "HSBA.L",
+    "BP.L",
+    "RIO.L",
+    "GSK.L",
+    "ULVR.L",
+    "REL.L",
+    "BATS.L",
+    "PRU.L",
+    "LLOY.L",
+    "BARC.L",
+    "VOD.L",
+    "RR.L",
+    "GLEN.L",
+    "AHT.L",
+    "NWG.L",
+    "TSCO.L",
+    "BA.L",
+    "LSEG.L",
+    # Alemanha (DAX)
+    "SAP.DE",
+    "SIE.DE",
+    "ALV.DE",
+    "DTG.DE",
+    "MBG.DE",
+    "BMW.DE",
+    "VOW3.DE",
+    "BAS.DE",
+    "BAYN.DE",
+    "ADS.DE",
+    # França (CAC 40)
+    "MC.PA",
+    "OR.PA",
+    "TTE.PA",
+    "SAN.PA",
+    "AIR.PA",
+    "SU.PA",
+    "BNP.PA",
+    "KER.PA",
+    "RMS.PA",
+    "CDI.PA",
+    # Holanda / Outros EU
+    "ASML.AS",
+    "INGA.AS",
+    "PRX.AS",
+    "SAN.MC",
+    "BBVA.MC",
+    "NESN.SW",
+    "NOVN.SW",
+    "ROG.SW",
+]
 
-def buscar_gaps(tickers_list):
+ASIA_TICKERS = [
+    # Japão (Tóquio)
+    "7203.T",
+    "6758.T",
+    "9984.T",
+    "6861.T",
+    "8306.T",
+    "7974.T",
+    "6501.T",
+    "7751.T",
+    "8035.T",
+    "9983.T",
+    # Hong Kong / China
+    "0700.HK",
+    "9988.HK",
+    "3690.HK",
+    "1810.HK",
+    "0941.HK",
+    "1299.HK",
+    "2318.HK",
+    "0388.HK",
+    "9618.HK",
+    "1024.HK",
+    # Taiwan
+    "2330.TW",
+    "2317.TW",
+    "2454.TW",
+    "2308.TW",
+    "2382.TW",
+    # Índia (NSE)
+    "RELIANCE.NS",
+    "TCS.NS",
+    "INFY.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "BHARTIARTL.NS",
+    "SBIN.NS",
+    "LTIM.NS",
+    "TATAMOTORS.NS",
+    "WIPRO.NS",
+]
+
+BR_TICKERS = [
+    "PETR4.SA",
+    "VALE3.SA",
+    "ITUB4.SA",
+    "BBDC4.SA",
+    "BBAS3.SA",
+    "ABEV3.SA",
+    "WEGE3.SA",
+    "RENT3.SA",
+    "PRIO3.SA",
+    "ELET3.SA",
+    "GGBR4.SA",
+    "CSNA3.SA",
+    "SUZB3.SA",
+    "JBSS3.SA",
+    "MGLU3.SA",
+    "B3SA3.SA",
+    "SANB11.SA",
+    "BPAC11.SA",
+    "RADL3.SA",
+    "LREN3.SA",
+    "RAIZ4.SA",
+    "VBBR3.SA",
+    "EMBR3.SA",
+    "EQTL3.SA",
+    "CPLE6.SA",
+    "CMIG4.SA",
+    "CCRO3.SA",
+    "CYRE3.SA",
+    "MRVE3.SA",
+    "ASAI3.SA",
+    "CRFB3.SA",
+    "NTCO3.SA",
+    "MULT3.SA",
+    "SBSP3.SA",
+    "HAPV3.SA",
+    "RDOR3.SA",
+    "EGIE3.SA",
+    "TAEE11.SA",
+    "ALOS3.SA",
+    "BRFS3.SA",
+]
+
+MIN_GAP_PCT = 2.0
+
+
+@st.cache_data(ttl=300)
+def carregar_dados_lote(tickers_list):
     alertas = []
     try:
         dados = yf.download(
             tickers_list, period="5d", progress=False, group_by="ticker"
         )
+
         for ticker in tickers_list:
             try:
-                df_ticker = dados[ticker] if len(tickers_list) > 1 else dados
+                if len(tickers_list) == 1:
+                    df_ticker = dados
+                else:
+                    if ticker in dados:
+                        df_ticker = dados[ticker]
+                    else:
+                        continue
+
                 if isinstance(df_ticker, pd.DataFrame) and "Close" in df_ticker:
                     df_clean = df_ticker.dropna(subset=["Close"])
+
                     if len(df_clean) >= 2:
                         fech_ant = float(df_clean["Close"].iloc[-2])
                         preco_atual = float(df_clean["Close"].iloc[-1])
+
                         if fech_ant > 0:
                             gap = ((preco_atual - fech_ant) / fech_ant) * 100
-                            if abs(gap) >= 2.0:
+
+                            if abs(gap) >= MIN_GAP_PCT:
+                                ticker_clean = ticker.split(".")[0]
                                 alertas.append({
-                                    "Ticker": ticker,
-                                    "Gap": round(gap, 2),
-                                    "Preco": round(preco_atual, 2),
-                                    "Fech": round(fech_ant, 2),
+                                    "Ticker": ticker_clean,
+                                    "Gap (%)": round(gap, 2),
+                                    "Abs_Gap": abs(gap),
+                                    "Preço": round(preco_atual, 2),
+                                    "Fech. Anterior": round(fech_ant, 2),
                                 })
             except Exception:
                 continue
@@ -94,39 +386,52 @@ def buscar_gaps(tickers_list):
 
     df_resultado = pd.DataFrame(alertas)
     if not df_resultado.empty:
-        df_resultado["Abs_Gap"] = df_resultado["Gap"].abs()
         df_resultado = df_resultado.sort_values(
             by="Abs_Gap", ascending=False
-        ).head(15)
+        ).head(20)
     return df_resultado
 
 
-def enviar_whatsapp(mensagem):
-    endpoint = f"{API_URL}/message/sendText/{INSTANCE_NAME}"
-    headers = {"apikey": API_KEY, "Content-Type": "application/json"}
-    payload = {
-        "number": GROUP_JID,
-        "options": {"delay": 1200, "presence": "composing"},
-        "textMessage": {"text": mensagem},
-    }
-    response = requests.post(endpoint, json=payload, headers=headers)
-    return response.status_code in [200, 201]
+def exibir_alertas_grelha(df):
+    if df is not None and not df.empty:
+        cols = st.columns(2)
+        for idx, row in df.iterrows():
+            col = cols[idx % 2]
+            cor = "🟢" if row["Gap (%)"] > 0 else "🔴"
+            with col:
+                with st.container():
+                    st.metric(
+                        label=f"{cor} {row['Ticker']}",
+                        value=f"${row['Preço']}",
+                        delta=f"{row['Gap (%)']}%",
+                    )
+                    st.write(f"Previous Close: **${row['Fech. Anterior']}**")
+                    st.divider()
+    else:
+        st.info("No stocks met the ±2% Gap criteria in this market right now.")
 
 
-# Execução do Alerta
-df_us = buscar_gaps(US_TICKERS)
+# Criação das 4 Abas
+tab_us, tab_uk_eu, tab_asia, tab_br = st.tabs(
+    ["🇺🇸 US - NYSE", "🇬🇧 UK & Europe", "🌏 Asia-Pacific", "🇧🇷 Brasil (B3)"]
+)
 
-if not df_us.empty:
-    msg = "🚨 *UKereno Market Alerts - US NYSE* 🚨\n\n"
-    for _, row in df_us.iterrows():
-        cor = "🟢" if row["Gap"] > 0 else "🔴"
-        sinal = "+" if row["Gap"] > 0 else ""
-        msg += f"{cor} *{row['Ticker']}*: {sinal}{row['Gap']}%\n   ├ Preço: ${row['Preco']}\n   └ Fech. Anterior: ${row['Fech']}\n\n"
+with tab_us:
+    dados_us = carregar_dados_lote(US_TICKERS)
+    exibir_alertas_grelha(dados_us)
 
-    msg += "📈 *Acesse o Dashboard completo:* https://bolsa-app.streamlit.app\n"
-    msg += "👉 *Grupo VIP:* https://chat.whatsapp.com/K3euCPlQmNJFrnalbtPQ0R"
+with tab_uk_eu:
+    dados_uk_eu = carregar_dados_lote(UK_EU_TICKERS)
+    exibir_alertas_grelha(dados_uk_eu)
 
-    enviar_whatsapp(msg)
-    print("✅ Alerta enviado com sucesso!")
-else:
-    print("ℹ️ Nenhum gap significativo encontrado.")
+with tab_asia:
+    dados_asia = carregar_dados_lote(ASIA_TICKERS)
+    exibir_alertas_grelha(dados_asia)
+
+with tab_br:
+    dados_br = carregar_dados_lote(BR_TICKERS)
+    exibir_alertas_grelha(dados_br)
+
+# Rodapé personalizado
+st.markdown("---")
+st.caption("Powered by **UKereno Global Data & Analytics**")
