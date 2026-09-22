@@ -7,8 +7,8 @@ INSTANCE_ID = os.environ.get("ZAPI_INSTANCE_ID")
 TOKEN = os.environ.get("ZAPI_TOKEN")
 CLIENT_TOKEN = os.environ.get("ZAPI_CLIENT_TOKEN")
 
-# ID Direto do Grupo WhatsApp (substitua pelo ID real terminado em @g.us)
-GROUP_ID = "COLOQUE_O_ID_DO_GRUPO_AQUI@g.us" 
+# Cole aqui o ID numérico do seu grupo do WhatsApp
+GROUP_ID = "120363XXXXXXXXXX@g.us" 
 
 HEADERS = {
     "Client-Token": CLIENT_TOKEN,
